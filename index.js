@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Main API
+// Main API Route
 app.get('/profile', async (req, res) => {
   const username = req.query.username;
   if (!username) {
@@ -37,33 +37,40 @@ app.get('/profile', async (req, res) => {
 
   try {
     const response = await axios.get(`https://www.instagram.com/${username}/`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0'
-      }
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     });
 
     const $ = cheerio.load(response.data);
-    const sharedData = response.data.match(/<script type="application\/ld\+json">(.+?)<\/script>/);
-    if (!sharedData || sharedData.length < 2) {
-      throw new Error("Unable to parse profile data.");
-    }
+    const fullNameRaw = $('meta[property="og:title"]').attr('content') || '';
+    const bioRaw = $('meta[property="og:description"]').attr('content') || '';
+    const profilePic = $('meta[property="og:image"]').attr('content') || null;
 
-    const data = JSON.parse(sharedData[1]);
+    const full_name = fullNameRaw.split('•')[0].trim();
+    const bio = bioRaw.split('-')[1]?.trim() || null;
 
-    res.json({
+    // Extract numbers using regex
+    const match = bioRaw.match(/([\d.,]+[MK]?) Followers, ([\d.,]+[MK]?) Following, ([\d.,]+[MK]?) Posts/);
+
+    const followers = match?.[1] || null;
+    const following = match?.[2] || null;
+    const posts = match?.[3] || null;
+
+    return res.json({
       status: 'success',
       developer: '@nobi_shops',
       data: {
         username,
-        full_name: data.name,
-        bio: data.description,
-        profile_pic_url: data.image,
-        external_url: data.url || null
+        full_name,
+        bio,
+        profile_pic_url: profilePic,
+        followers,
+        following,
+        posts
       }
     });
 
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: 'Failed to fetch data. User may not exist or is private.',
       developer: '@nobi_shops'
