@@ -1,78 +1,56 @@
 const express = require('express');
 const axios = require('axios');
-const cheerio = require('cheerio');
 
 const app = express();
 
-// Landing Page
+// Replace with your session cookies from browser
+const IG_HEADERS = {
+  'User-Agent': 'Mozilla/5.0',
+  'x-ig-app-id': '936619743392459',
+  'x-asbd-id': '129477',
+  'x-csrftoken': 'wytZHjMahu4YPRCoaWNjfN5WR3AWyCSy',
+  'cookie': `sessionid=16223717497%3AaRJ2rf9MlVW4TK%3A12%3AAYcEYz2Mu_1sjlAdfOSlXVlhvJ2wmUlpl8m_xRMAVg; ds_user_id=16223717497; csrftoken=wytZHjMahu4YPRCoaWNjfN5WR3AWyCSy;`
+};
+
 app.get('/', (req, res) => {
-  res.setHeader('Content-Type', 'text/html');
-  res.send(`
-    <h2>📸 Insta Profile Info API</h2>
-    <p>This API allows you to fetch public Instagram profile details.</p>
-
-    <h3>📌 Endpoints:</h3>
-    <ul>
-      <li>GET /profile?username=your_instagram_username</li>
-    </ul>
-
-    <h3>🧪 Example:</h3>
-    <code>/profile?username=teamnobi</code>
-
-    <br><br>
-    <p>Made with ❤️ by <strong>@nobi_shops</strong></p>
-  `);
+  res.send(`<h2>🔥 Insta GraphQL Profile API by @nobi_shops</h2>`);
 });
 
-// Main API Route
 app.get('/profile', async (req, res) => {
   const username = req.query.username;
   if (!username) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Missing username in query.',
-      developer: '@nobi_shops'
-    });
+    return res.status(400).json({ status: 'error', message: 'Missing username.', developer: '@nobi_shops' });
   }
 
   try {
-    const response = await axios.get(`https://www.instagram.com/${username}/`, {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+    // Step 1: Get user ID from username
+    const userInfo = await axios.get(`https://www.instagram.com/${username}/?__a=1&__d=dis`, {
+      headers: IG_HEADERS
     });
 
-    const $ = cheerio.load(response.data);
-    const fullNameRaw = $('meta[property="og:title"]').attr('content') || '';
-    const bioRaw = $('meta[property="og:description"]').attr('content') || '';
-    const profilePic = $('meta[property="og:image"]').attr('content') || null;
+    const user = userInfo.data?.graphql?.user;
+    if (!user) throw new Error("User not found");
 
-    const full_name = fullNameRaw.split('•')[0].trim();
-    const bio = bioRaw.split('-')[1]?.trim() || null;
-
-    // Extract numbers using regex
-    const match = bioRaw.match(/([\d.,]+[MK]?) Followers, ([\d.,]+[MK]?) Following, ([\d.,]+[MK]?) Posts/);
-
-    const followers = match?.[1] || null;
-    const following = match?.[2] || null;
-    const posts = match?.[3] || null;
-
-    return res.json({
+    res.json({
       status: 'success',
       developer: '@nobi_shops',
       data: {
-        username,
-        full_name,
-        bio,
-        profile_pic_url: profilePic,
-        followers,
-        following,
-        posts
+        username: user.username,
+        full_name: user.full_name,
+        bio: user.biography,
+        profile_pic_url: user.profile_pic_url_hd || user.profile_pic_url,
+        followers: user.edge_followed_by.count,
+        following: user.edge_follow.count,
+        posts: user.edge_owner_to_timeline_media.count,
+        is_private: user.is_private,
+        is_verified: user.is_verified
       }
     });
 
   } catch (err) {
-    return res.status(500).json({
+    res.status(500).json({
       status: 'error',
-      message: 'Failed to fetch data. User may not exist or is private.',
+      message: 'Failed to fetch user info. Check cookies or username.',
       developer: '@nobi_shops'
     });
   }
