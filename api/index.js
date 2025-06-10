@@ -7,18 +7,15 @@ const app = express();
 const fetchInstagramInfo = async (username) => {
   try {
     username = username.trim().toLowerCase().replace('@', '');
-    const url = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
+    const url = `https://www.instagram.com/${username}/?__a=1&__d=dis`;
 
     const headers = {
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      'accept': '*/*',
-      'referer': 'https://www.instagram.com/',
-      'x-ig-app-id': '936619743392459',
-      'cookie': 'ig_cb=1'
+      'user-agent': 'Mozilla/5.0',
+      'accept': 'application/json'
     };
 
     const response = await axios.get(url, { headers, timeout: 10000 });
-    const user_data = response.data?.data?.user;
+    const user_data = response.data?.graphql?.user;
 
     if (!user_data) {
       return {
