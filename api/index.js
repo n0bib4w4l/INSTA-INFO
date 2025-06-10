@@ -10,16 +10,11 @@ const fetchInstagramInfo = async (username) => {
     const url = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
 
     const headers = {
-      'accept': '*/*',
-      'accept-encoding': 'gzip, deflate, br',
-      'accept-language': 'en-US,en;q=0.9',
-      'origin': 'https://www.instagram.com',
-      'referer': 'https://www.instagram.com/',
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      'x-asbd-id': '198387',
-      'x-csrftoken': 'V9FEMGcZBdh2U1lbzDvsAM6aRjMqxzXjc',
+      'accept': '*/*',
+      'referer': 'https://www.instagram.com/',
       'x-ig-app-id': '936619743392459',
-      'x-ig-www-claim': '0',
+      'cookie': 'ig_cb=1'
     };
 
     const response = await axios.get(url, { headers, timeout: 10000 });
@@ -74,7 +69,7 @@ app.get('/', (req, res) => {
   res.send(`
     <html>
       <head>
-        <title>Instagram Info API</title>
+        <title>Insta Info API</title>
         <style>
           body {
             margin: 0;
@@ -97,12 +92,25 @@ app.get('/', (req, res) => {
             margin-top: 20px;
             font-weight: bold;
           }
+          .small {
+            margin-top: 50px;
+            font-size: 0.8em;
+            opacity: 0.3;
+          }
         </style>
       </head>
       <body>
-        <h1>💻 HACKER THEME INSTAGRAM INFO API</h1>
-        <p>Use <code>/api?username=cristiano</code> to fetch info</p>
+        <h1>🔐 Insta Information API</h1>
+        <p>This API allows you to send an Instagram password reset link.</p>
+
+        <h3>📌 Endpoints:</h3>
+        <p><code>GET  /api?username=cristiano</code></p>
+
+        <h3>🧪 Example:</h3>
+        <p><code>/api?username=cristiano</code></p>
+
         <a href="https://t.me/nobi_shops" class="button">Join Channel</a>
+        <div class="small">Made with ❤️ by @nobi_shops</div>
       </body>
     </html>
   `);
